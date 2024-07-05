@@ -1,18 +1,72 @@
 import { Billboard, OrbitControls, Text } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { motion } from "framer-motion-3d";
-import { useRef, useState } from "react";
-import WoodenFish from "./components/WoodenFish";
+import { useCallback, useEffect, useRef, useState } from "react";
+import WoodenFish, {
+  type WoodenFishImperativeHandle,
+} from "./components/WoodenFish";
+import { Button } from "./components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./components/ui/tooltip";
 
 function App() {
   const [count, setCount] = useState(0);
   const [texts, setTexts] = useState<number[]>([]);
   const textId = useRef(0);
+  const [auto, setAuto] = useState(false);
+  const woodenFishImperativeHandle = useRef<WoodenFishImperativeHandle>(null!);
+
+  const onClick = useCallback(() => {
+    setCount(count + 1);
+    setTexts((prev) => [...prev, textId.current++]);
+    woodenFishImperativeHandle.current.sequence();
+  }, [count]);
+
+  useEffect(() => {
+    if (!auto) return;
+
+    const timeId = setInterval(onClick, 1000);
+
+    return () => {
+      clearInterval(timeId);
+    };
+  }, [auto, onClick]);
 
   return (
     <main className="w-full h-full bg-black">
-      <div className="select-none font-bold text-2xl text-white p-4">
-        功德数： {count}
+      <div className="select-none font-bold text-2xl text-white p-4 flex gap-4 items-center">
+        <span>功德数： {count}</span>
+        {count < 10 ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipContent>累积功德500方可解锁</TooltipContent>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="destructive"
+                  className="bg-green-500 hover:bg-green-500/90 !pointer-events-auto"
+                  disabled
+                >
+                  自动点击
+                </Button>
+              </TooltipTrigger>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <Button
+            className={
+              auto
+                ? "bg-red-500 hover:bg-red-500/90"
+                : "bg-green-500 hover:bg-green-500/90"
+            }
+            onClick={() => setAuto(!auto)}
+          >
+            {auto ? "停止点击" : "自动点击"}
+          </Button>
+        )}
       </div>
 
       <Canvas camera={{ position: [10, 15, 20] }}>
@@ -23,12 +77,7 @@ function App() {
         <spotLight position={[0, -100, 0]} angle={90} decay={0} />
         <spotLight position={[0, 100, 200]} angle={270} decay={0} />
 
-        <WoodenFish
-          onClick={() => {
-            setCount(count + 1);
-            setTexts((prev) => [...prev, textId.current++]);
-          }}
-        />
+        <WoodenFish ref={woodenFishImperativeHandle} onClick={onClick} />
 
         <Billboard>
           {texts.map((id) => (
