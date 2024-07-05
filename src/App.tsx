@@ -40,7 +40,7 @@ function App() {
     <main className="w-full h-full bg-black">
       <div className="select-none font-bold text-2xl text-white p-4 flex gap-4 items-center">
         <span>功德数： {count}</span>
-        {count < 10 ? (
+        {count < 500 ? (
           <TooltipProvider>
             <Tooltip>
               <TooltipContent>累积功德500方可解锁</TooltipContent>
